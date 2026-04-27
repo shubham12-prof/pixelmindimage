@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-import Navbar from "./components/Navbar";
-import { ThemeProvider } from "./components/ThemeProvider";
+import Navbar from "../components/Navbar";
+import { ThemeProvider } from "../components/ThemeProvider";
+import { SessionProvider } from "next-auth/react";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -24,10 +25,12 @@ export default function RootLayout({
       <body
         className={`${geist.variable} font-sans bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen`}
       >
-        <ThemeProvider>
-          <Navbar />
-          <main>{children}</main>
-        </ThemeProvider>
+        <SessionProvider>
+          <ThemeProvider>
+            <Navbar />
+            <main>{children}</main>
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   );
