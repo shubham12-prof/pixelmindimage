@@ -32,11 +32,34 @@ export default function GeneratePage() {
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setImage(`https://picsum.photos/seed/${Date.now()}/512/512`);
-    setLoading(false);
-  };
+    setImage(null);
 
+    try {
+      console.log("Calling /api/generate with:", { prompt, style: selected });
+
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, style: selected }),
+      });
+
+      console.log("Response status:", res.status);
+      const data = await res.json();
+      console.log("Response data:", data);
+
+      if (!res.ok) {
+        alert(data.error || "Generation failed");
+        return;
+      }
+
+      setImage(data.image);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
   const remaining: number = 3;
 
   return (
