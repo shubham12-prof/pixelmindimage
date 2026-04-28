@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Generation = {
   id: string;
@@ -9,93 +9,6 @@ type Generation = {
   createdAt: string;
   imageUrl: string;
 };
-
-const mockGenerations: Generation[] = [
-  {
-    id: "1",
-    prompt: "Futuristic city at night with neon lights",
-    style: "cyberpunk",
-    createdAt: "2 mins ago",
-    imageUrl: "https://picsum.photos/seed/101/512/512",
-  },
-  {
-    id: "2",
-    prompt: "Anime girl in cherry blossom garden",
-    style: "anime",
-    createdAt: "1 hour ago",
-    imageUrl: "https://picsum.photos/seed/102/512/512",
-  },
-  {
-    id: "3",
-    prompt: "Desert sunset oil painting warm tones",
-    style: "oil-paint",
-    createdAt: "3 hours ago",
-    imageUrl: "https://picsum.photos/seed/103/512/512",
-  },
-  {
-    id: "4",
-    prompt: "Cyberpunk samurai warrior in rain",
-    style: "cyberpunk",
-    createdAt: "5 hours ago",
-    imageUrl: "https://picsum.photos/seed/104/512/512",
-  },
-  {
-    id: "5",
-    prompt: "Ocean storm watercolor dramatic sky",
-    style: "watercolor",
-    createdAt: "Yesterday",
-    imageUrl: "https://picsum.photos/seed/105/512/512",
-  },
-  {
-    id: "6",
-    prompt: "Enchanted forest pencil sketch",
-    style: "sketch",
-    createdAt: "Yesterday",
-    imageUrl: "https://picsum.photos/seed/106/512/512",
-  },
-  {
-    id: "7",
-    prompt: "Mountain peak at golden hour realistic photo",
-    style: "realistic",
-    createdAt: "2 days ago",
-    imageUrl: "https://picsum.photos/seed/107/512/512",
-  },
-  {
-    id: "8",
-    prompt: "Anime space explorer floating in galaxy",
-    style: "anime",
-    createdAt: "2 days ago",
-    imageUrl: "https://picsum.photos/seed/108/512/512",
-  },
-  {
-    id: "9",
-    prompt: "Rainy Tokyo street at night neon reflections",
-    style: "cyberpunk",
-    createdAt: "3 days ago",
-    imageUrl: "https://picsum.photos/seed/109/512/512",
-  },
-  {
-    id: "10",
-    prompt: "Sunflower field watercolor soft pastel",
-    style: "watercolor",
-    createdAt: "3 days ago",
-    imageUrl: "https://picsum.photos/seed/110/512/512",
-  },
-  {
-    id: "11",
-    prompt: "Portrait of a knight realistic detailed armor",
-    style: "realistic",
-    createdAt: "4 days ago",
-    imageUrl: "https://picsum.photos/seed/111/512/512",
-  },
-  {
-    id: "12",
-    prompt: "Ancient temple sketch with vines and fog",
-    style: "sketch",
-    createdAt: "4 days ago",
-    imageUrl: "https://picsum.photos/seed/112/512/512",
-  },
-];
 
 const filters = [
   { id: "all", label: "All" },
@@ -110,15 +23,42 @@ const filters = [
 export default function GalleryPage() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedImage, setSelectedImage] = useState<Generation | null>(null);
+  const [generations, setGenerations] = useState<Generation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [remaining, setRemaining] = useState(5);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/gallery").then((r) => r.json()),
+      fetch("/api/remaining").then((r) => r.json()),
+    ])
+      .then(([galleryData, remainingData]) => {
+        setGenerations(galleryData.generations ?? []);
+        setRemaining(remainingData.remaining ?? 5);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const filtered: Generation[] =
     activeFilter === "all"
-      ? mockGenerations
-      : mockGenerations.filter((g: Generation) => g.style === activeFilter);
+      ? generations
+      : generations.filter((g) => g.style === activeFilter);
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (mins < 60) return `${mins} mins ago`;
+    if (hours < 24) return `${hours} hours ago`;
+    return `${days} days ago`;
+  };
 
   return (
     <div className="min-h-[calc(100vh-57px)] px-6 py-10 max-w-6xl mx-auto">
-      {/* Header */}
       <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-medium text-gray-900 dark:text-gray-100 mb-1">
@@ -128,12 +68,10 @@ export default function GalleryPage() {
             All your generated images in one place
           </p>
         </div>
-
         <div className="flex gap-6">
           {[
-            { label: "Total", value: mockGenerations.length },
-            { label: "Today", value: 2 },
-            { label: "Remaining", value: 3 },
+            { label: "Total", value: generations.length },
+            { label: "Remaining", value: remaining },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-xl font-medium text-neon-primary">
@@ -163,41 +101,50 @@ export default function GalleryPage() {
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {loading && (
+        <div className="flex items-center justify-center py-24">
+          <div className="w-8 h-8 border-2 border-neon-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
+      {!loading && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="w-16 h-16 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center">
             <span className="text-2xl text-gray-300 dark:text-gray-600">◈</span>
           </div>
           <p className="text-sm text-gray-400 dark:text-gray-600">
-            No images in this style yet
+            {activeFilter === "all"
+              ? "No images yet — go generate some!"
+              : "No images in this style yet"}
           </p>
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtered.map((gen: Generation) => (
-          <div
-            key={gen.id}
-            onClick={() => setSelectedImage(gen)}
-            className="group relative aspect-square rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-neon-border dark:hover:border-neon-primary transition-all duration-200"
-          >
-            <img
-              src={gen.imageUrl}
-              alt={gen.prompt}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-
-            <div className="absolute inset-0 bg-gray-950/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-3">
-              <span className="text-xs text-white font-medium line-clamp-2 leading-relaxed">
-                {gen.prompt}
-              </span>
-              <span className="text-xs text-gray-400 mt-1">
-                {gen.style} · {gen.createdAt}
-              </span>
+      {!loading && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filtered.map((gen: Generation) => (
+            <div
+              key={gen.id}
+              onClick={() => setSelectedImage(gen)}
+              className="group relative aspect-square rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-neon-border dark:hover:border-neon-primary transition-all duration-200"
+            >
+              <img
+                src={gen.imageUrl}
+                alt={gen.prompt}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gray-950/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-3">
+                <span className="text-xs text-white font-medium line-clamp-2 leading-relaxed">
+                  {gen.prompt}
+                </span>
+                <span className="text-xs text-gray-400 mt-1">
+                  {gen.style} · {formatDate(gen.createdAt)}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {selectedImage !== null && (
         <div
@@ -215,7 +162,6 @@ export default function GalleryPage() {
                 className="w-full h-full object-cover"
               />
             </div>
-
             <div className="p-5">
               <p className="text-sm text-gray-900 dark:text-gray-100 font-medium mb-1">
                 {selectedImage.prompt}
@@ -225,10 +171,9 @@ export default function GalleryPage() {
                   {selectedImage.style}
                 </span>
                 <span className="text-xs text-gray-400 dark:text-gray-600">
-                  {selectedImage.createdAt}
+                  {formatDate(selectedImage.createdAt)}
                 </span>
               </div>
-
               <div className="flex gap-3">
                 <a
                   href={selectedImage.imageUrl}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const styles = [
   { id: "realistic", label: "Realistic", icon: "◎" },
@@ -11,17 +11,28 @@ const styles = [
   { id: "sketch", label: "Sketch", icon: "◇" },
 ];
 
+const DAILY_LIMIT = 5;
+
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
   const [selected, setSelected] = useState("realistic");
   const [enhancing, setEnhancing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
+  const [remaining, setRemaining] = useState<number>(DAILY_LIMIT);
+
+  // Fetch remaining generations on page load
+  useEffect(() => {
+    fetch("/api/remaining")
+      .then((res) => res.json())
+      .then((data) => setRemaining(data.remaining))
+      .catch(() => setRemaining(DAILY_LIMIT));
+  }, []);
 
   const handleEnhance = async () => {
     if (!prompt.trim()) return;
     setEnhancing(true);
-    await new Promise((r) => setTimeout(r, 1500)); // mock delay
+    await new Promise((r) => setTimeout(r, 1500));
     setPrompt(
       prompt +
         ", highly detailed, cinematic lighting, 8k resolution, sharp focus, professional photography",
@@ -35,17 +46,24 @@ export default function GeneratePage() {
     setImage(null);
 
     try {
-      console.log("Calling /api/generate with:", { prompt, style: selected });
-
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, style: selected }),
       });
 
-      console.log("Response status:", res.status);
       const data = await res.json();
-      console.log("Response data:", data);
+
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      if (res.status === 429) {
+        alert(data.error);
+        setRemaining(0);
+        return;
+      }
 
       if (!res.ok) {
         alert(data.error || "Generation failed");
@@ -53,6 +71,10 @@ export default function GeneratePage() {
       }
 
       setImage(data.image);
+
+      if (typeof data.remaining === "number") {
+        setRemaining(data.remaining);
+      }
     } catch (err) {
       console.error("Fetch error:", err);
       alert("Something went wrong. Please try again.");
@@ -60,7 +82,6 @@ export default function GeneratePage() {
       setLoading(false);
     }
   };
-  const remaining: number = 3;
 
   return (
     <div className="min-h-[calc(100vh-57px)] px-6 py-10 max-w-5xl mx-auto">
@@ -96,7 +117,7 @@ export default function GeneratePage() {
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="A futuristic city at night with glowing neon signs, flying cars, rain reflections on wet streets..."
+              placeholder="A futuristic city at night with glowing neon signs..."
               rows={5}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-600 resize-none outline-none focus:border-neon-border dark:focus:border-neon-primary transition-colors"
             />
@@ -137,16 +158,23 @@ export default function GeneratePage() {
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 Daily generations
               </span>
-              <span className="text-xs font-medium text-neon-primary">
-                {remaining} / 5 remaining
+              <span
+                className={`text-xs font-medium ${remaining === 0 ? "text-rose-500" : "text-neon-primary"}`}
+              >
+                {remaining} / {DAILY_LIMIT} remaining
               </span>
             </div>
             <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full">
               <div
-                className="h-1.5 bg-neon-primary rounded-full transition-all duration-500"
-                style={{ width: `${(remaining / 5) * 100}%` }}
+                className={`h-1.5 rounded-full transition-all duration-500 ${remaining === 0 ? "bg-rose-500" : "bg-neon-primary"}`}
+                style={{ width: `${(remaining / DAILY_LIMIT) * 100}%` }}
               />
             </div>
+            {remaining === 0 && (
+              <p className="text-xs text-rose-500 mt-2">
+                Daily limit reached. Come back tomorrow!
+              </p>
+            )}
           </div>
 
           <button
@@ -159,6 +187,8 @@ export default function GeneratePage() {
                 <span className="w-4 h-4 border-2 border-neon-soft border-t-transparent rounded-full animate-spin" />
                 Generating...
               </span>
+            ) : remaining === 0 ? (
+              "Limit reached for today"
             ) : (
               "Generate image ✦"
             )}
@@ -169,7 +199,6 @@ export default function GeneratePage() {
           <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
             Output
           </label>
-
           <div className="aspect-square rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
             {loading ? (
               <div className="flex flex-col items-center gap-4">
@@ -203,9 +232,9 @@ export default function GeneratePage() {
 
           {image && !loading && (
             <a
-              href={image}
+              href={image ?? ""}
               download="pixelmind-generation.png"
-              className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 text-center hover:border-neon-border dark:hover:border-neon-primary transition-colors no-underline"
+              className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 text-center hover:border-neon-border dark:hover:border-neon-primary transition-colors no-underline block"
             >
               Download image ↓
             </a>
