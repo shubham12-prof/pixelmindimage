@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ remaining: 0 });
+      return NextResponse.json({ remaining: 5 });
     }
 
     const remaining = await getRemainingGenerations(session.user.id);
