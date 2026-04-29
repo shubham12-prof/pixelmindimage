@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 type Generation = {
@@ -128,7 +128,7 @@ export default function GalleryPage() {
               onClick={() => setSelectedImage(gen)}
               className="group relative aspect-square rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-neon-border dark:hover:border-neon-primary transition-all duration-200"
             >
-              <img
+              <Image
                 src={gen.imageUrl}
                 alt={gen.prompt}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -156,10 +156,11 @@ export default function GalleryPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="aspect-square w-full">
-              <img
+              <Image
                 src={selectedImage.imageUrl}
                 alt={selectedImage.prompt}
                 className="w-full h-full object-cover"
+                fill
               />
             </div>
             <div className="p-5">

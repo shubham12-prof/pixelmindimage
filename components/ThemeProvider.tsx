@@ -15,20 +15,21 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pixelmind-theme") as Theme | null;
+      return saved ?? "dark";
+    }
+    return "dark";
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem("pixelmind-theme") as Theme;
-    const initial = saved || "dark";
-    setTheme(initial);
-    document.documentElement.classList.toggle("dark", initial === "dark");
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("pixelmind-theme", theme);
+  }, [theme]);
 
   const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.classList.toggle("dark", next === "dark");
-    localStorage.setItem("pixelmind-theme", next);
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   return (
