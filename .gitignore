@@ -25,6 +25,7 @@
 *.pem
 
 k8s/secrets.yaml
+
 .vercel
 
 # debug
