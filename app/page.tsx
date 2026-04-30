@@ -51,6 +51,15 @@ const stats = [
   { value: "Free", label: "To get started" },
 ];
 
+const stylePills = [
+  "Cyberpunk",
+  "Realistic",
+  "Anime",
+  "Oil Painting",
+  "Watercolor",
+  "Sketch",
+];
+
 export default function Home() {
   return (
     <div className="min-h-[calc(100vh-57px)]">
@@ -58,7 +67,7 @@ export default function Home() {
         <div className="inline-flex items-center gap-2 bg-neon-soft border border-neon-border rounded-full px-4 py-1.5 mb-6">
           <div className="w-1.5 h-1.5 rounded-full bg-neon-primary" />
           <span className="text-xs font-medium text-neon-secondary">
-            Powered by Stable Diffusion
+            Powered by FLUX.1-schnell
           </span>
         </div>
 
@@ -69,7 +78,7 @@ export default function Home() {
 
         <p className="text-base text-gray-500 dark:text-gray-400 leading-relaxed mb-10 max-w-md">
           Type a prompt. Pick a style. Watch your imagination render in seconds
-          — powered by Stable Diffusion.
+          — powered by FLUX.1-schnell.
         </p>
 
         <div className="flex flex-wrap gap-3 justify-center">
@@ -100,7 +109,32 @@ export default function Home() {
           </div>
         ))}
       </section>
+      <div className="w-full max-w-3xl mx-auto px-3 sm:px-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center mb-3">
+          <div className="flex-1 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-[#e8e6f0]/60 font-light">
+            A cyberpunk city at night with neon lights...
+          </div>
 
+          <button className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-linear-to-br from-violet-600 to-indigo-600 text-white text-sm font-medium shadow-[0_0_16px_rgba(124,58,237,0.3)]">
+            Generate ✦
+          </button>
+        </div>
+
+        <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
+          {stylePills.map((pill, i) => (
+            <span
+              key={pill}
+              className={`text-[11px] px-3 py-1 rounded-full border transition-colors whitespace-nowrap ${
+                i === 0
+                  ? "bg-violet-500/20 border-violet-400/40 text-violet-300"
+                  : "bg-violet-500/[0.07] border-violet-500/20 text-violet-400/70"
+              }`}
+            >
+              {pill}
+            </span>
+          ))}
+        </div>
+      </div>
       <div className="w-full h-px bg-gray-100 dark:bg-gray-800 mb-16" />
 
       <section className="px-8 pb-20 max-w-5xl mx-auto">
@@ -129,18 +163,20 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="text-center px-6 py-16 border-t border-gray-100 dark:border-gray-800">
-        <h2 className="text-2xl font-medium text-gray-900 dark:text-gray-100 mb-3">
+      <section className="relative z-10 mx-6 mb-16 rounded-2xl bg-violet-500/8 border border-violet-500/20 px-8 py-14 text-center overflow-hidden">
+        <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-100 h-75 rounded-full bg-violet-600/12 blur-[80px]" />
+        <h2 className="relative text-[24px] font-black text-[#f0eeff] tracking-[-0.8px] mb-2">
           Ready to create?
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+        <p className="relative text-sm text-[#e8e6f0]/40 font-light mb-7">
           No credit card needed. 5 free generations every day.
         </p>
         <Link
           href="/generate"
-          className="px-8 py-3 rounded-lg bg-neon-secondary text-neon-soft text-sm font-medium no-underline hover:opacity-90 transition-opacity"
+          className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-linear-to-br from-violet-600 to-indigo-600 text-white text-sm font-medium no-underline shadow-[0_0_28px_rgba(124,58,237,0.35)] hover:shadow-[0_0_40px_rgba(124,58,237,0.55)] hover:-translate-y-0.5 transition-all duration-200"
         >
           Generate your first image
+          <span className="opacity-80">→</span>
         </Link>
       </section>
     </div>
