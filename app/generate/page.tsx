@@ -20,8 +20,6 @@ export default function GeneratePage() {
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [remaining, setRemaining] = useState<number>(DAILY_LIMIT);
-
-  // Fetch remaining generations on page load
   useEffect(() => {
     fetch("/api/remaining")
       .then((res) => res.json())

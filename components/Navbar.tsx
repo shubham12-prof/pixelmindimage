@@ -77,7 +77,10 @@ export default function Navbar() {
                   className="rounded-full"
                 />
               )}
-              <button onClick={() => signOut({ callbackUrl: "/" })}>
+              <button
+                className="hover:bg-neon-primary hover:text-neon-soft hidden md:block px-4 py-2 rounded-lg bg-neon-secondary text-neon-soft text-xs"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
                 Sign out
               </button>
             </div>

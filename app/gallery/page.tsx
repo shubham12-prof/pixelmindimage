@@ -131,6 +131,8 @@ export default function GalleryPage() {
               <Image
                 src={gen.imageUrl}
                 alt={gen.prompt}
+                width={500}
+                height={500}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gray-950/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-3">
